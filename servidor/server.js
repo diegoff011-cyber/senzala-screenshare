@@ -21,6 +21,29 @@ if (process.env.ICE_SERVERS) {
   }
 }
 
+// TURN automático pelo Metered (plano gratuito): defina METERED_DOMAIN (ex: meuapp.metered.live)
+// e METERED_API_KEY no Render. As credenciais são renovadas a cada 30 minutos.
+let currentIce = ICE_SERVERS;
+
+async function refreshIce() {
+  const domain = process.env.METERED_DOMAIN;
+  const key = process.env.METERED_API_KEY;
+  if (!domain || !key) return;
+  try {
+    const r = await fetch('https://' + domain + '/api/v1/turn/credentials?apiKey=' + encodeURIComponent(key));
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const list = await r.json();
+    if (Array.isArray(list) && list.length) {
+      currentIce = list;
+      console.log('TURN carregado (' + list.length + ' servidores).');
+    }
+  } catch (e) {
+    console.error('Falha ao buscar TURN:', e.message);
+  }
+}
+refreshIce();
+setInterval(refreshIce, 30 * 60 * 1000);
+
 const server = http.createServer((req, res) => {
   // O Render usa isso para saber que o servidor está vivo.
   res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -71,7 +94,7 @@ wss.on('connection', (ws) => {
       owners.set(m.id, { token: m.token, lastSeen: Date.now() });
       online.set(m.id, { ws, token: m.token });
       ws.id = m.id;
-      return send(ws, { type: 'registered', id: m.id, iceServers: ICE_SERVERS });
+      return send(ws, { type: 'registered', id: m.id, iceServers: currentIce });
     }
 
     if (!ws.id) return;
