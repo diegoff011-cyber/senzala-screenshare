@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; connect-src ws: wss:; style-src 'self'; script-src 'self'; img-src 'self' data:">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Senzala Screenshare</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="home" class="screen">
+  <header class="top">
+    <h1 class="brand">Senzala <span>Screenshare</span></h1>
+    <div id="status" class="status" data-state="connecting">
+      <span class="led"></span><span id="statusText">Conectando ao servidor…</span>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="card mine">
+      <h2>Seu código</h2>
+      <div id="myCode" class="code" aria-live="polite">--- --- ---</div>
+      <p class="hint">Passe este código para quem vai acessar seu PC. Você sempre decide se aceita ou não.</p>
+      <div class="row">
+        <button id="copyBtn" class="btn">Copiar código</button>
+        <button id="newBtn" class="btn ghost">Gerar novo código</button>
+      </div>
+      <div id="hostBox" class="hostbox" hidden>
+        <span id="hostText"></span>
+        <button id="hostStop" class="btn danger">Desconectar</button>
+      </div>
+    </section>
+
+    <section class="card other">
+      <h2>Acessar outro PC</h2>
+      <label class="field" for="remoteCode">Código do outro PC</label>
+      <input id="remoteCode" class="codeinput" type="text" inputmode="numeric" autocomplete="off"
+             maxlength="11" placeholder="000 000 000" spellcheck="false">
+      <button id="connectBtn" class="btn primary big" disabled>Conectar</button>
+      <p class="hint">A outra pessoa vai receber um pedido na tela dela e precisa aceitar.</p>
+    </section>
+  </main>
+
+  <footer class="settings">
+    <label class="inline">Seu nome
+      <input id="nameInput" type="text" maxlength="30" autocomplete="off" spellcheck="false">
+    </label>
+    <label class="inline">Qualidade quando acessarem meu PC
+      <select id="quality">
+        <option value="equilibrada">Equilibrada (30 fps)</option>
+        <option value="alta">Alta (60 fps)</option>
+        <option value="economia">Economia (20 fps)</option>
+      </select>
+    </label>
+    <label class="check">
+      <input id="autostart" type="checkbox"> Abrir junto com o Windows
+    </label>
+  </footer>
+</div>
+
+<div id="viewer" class="screen" hidden>
+  <div class="toolbar">
+    <span id="viewerInfo" class="vinfo"></span>
+    <div class="tools">
+      <button id="ctlBtn" class="btn small">Controle: ligado</button>
+      <button id="fsBtn" class="btn small">Tela cheia</button>
+      <button id="endBtn" class="btn small danger">Desconectar</button>
+    </div>
+  </div>
+  <div id="screen" class="remote" tabindex="0">
+    <video id="video" autoplay playsinline muted></video>
+  </div>
+</div>
+
+<div id="modal" class="overlay" hidden>
+  <div class="dialog" role="alertdialog" aria-labelledby="modalTitle">
+    <h2 id="modalTitle">Pedido de acesso</h2>
+    <p id="modalText"></p>
+    <div class="dialog-actions">
+      <button id="accCtl" class="btn primary">Aceitar e permitir controle</button>
+      <button id="accView" class="btn">Aceitar só para ver</button>
+      <button id="reject" class="btn ghost">Recusar</button>
+    </div>
+  </div>
+</div>
+
+<div id="wait" class="overlay" hidden>
+  <div class="dialog">
+    <h2>Aguardando o outro PC</h2>
+    <p id="waitText">O pedido foi enviado. Peça para a outra pessoa aceitar.</p>
+    <div class="dialog-actions">
+      <button id="waitCancel" class="btn ghost">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>
