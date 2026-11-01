@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'self'">
+<title>Senzala Screenshare</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0a0a0a; overflow: hidden; -webkit-app-region: drag; user-select: none; }
+  body { display: flex; align-items: center; gap: 12px; padding: 0 12px; box-sizing: border-box;
+         border: 2px solid #e10600; font: 600 14px "Segoe UI", Arial, sans-serif; color: #fff; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #e10600; flex: none; animation: p 1.4s ease-in-out infinite; }
+  @keyframes p { 50% { opacity: .35; } }
+  .txt { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  button { -webkit-app-region: no-drag; background: #e10600; color: #fff; border: 0; border-radius: 6px;
+           padding: 8px 14px; font: 700 13px "Segoe UI", Arial, sans-serif; cursor: pointer; }
+  button:hover { background: #ff2a21; }
+  button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
+</style>
+</head>
+<body>
+  <span class="dot"></span>
+  <span class="txt" id="txt"></span>
+  <button id="stop">Desconectar</button>
+  <script src="bar.js"></script>
+</body>
+</html>

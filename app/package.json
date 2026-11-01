@@ -1,0 +1,31 @@
+{
+  "name": "senzala-screenshare",
+  "productName": "Senzala Screenshare",
+  "version": "1.0.0",
+  "description": "Acesso remoto entre PCs",
+  "main": "main.js",
+  "author": "Dgroots",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.senzala.screenshare",
+    "productName": "Senzala Screenshare",
+    "files": ["main.js", "preload.js", "config.json", "renderer/**/*", "assets/**/*"],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Senzala Screenshare"
+    }
+  }
+}
