@@ -7,19 +7,28 @@ const { WebSocketServer } = require('ws');
 
 const PORT = process.env.PORT || 3000;
 
-// Servidores STUN (ajudam a descobrir o caminho entre os PCs).
-// Para redes difíceis, adicione um TURN na variável ICE_SERVERS (veja o LEIA-ME).
-let ICE_SERVERS = [
+// Servidores STUN públicos de alta velocidade (Google, Cloudflare, Mozilla e STUN Protocol)
+// 100% gratuitos, ilimitados e sem depender de contas ou APIs de terceiros.
+const DEFAULT_STUN_SERVERS = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun2.l.google.com:19302' },
+  { urls: 'stun:stun.cloudflare.com:3478' },
+  { urls: 'stun:global.stun.twilio.com:3478' },
+  { urls: 'stun:stun.stunprotocol.org:3478' }
 ];
+
+let ICE_SERVERS = DEFAULT_STUN_SERVERS;
 if (process.env.ICE_SERVERS) {
   try {
-    ICE_SERVERS = JSON.parse(process.env.ICE_SERVERS);
+    const custom = JSON.parse(process.env.ICE_SERVERS);
+    if (Array.isArray(custom) && custom.length) ICE_SERVERS = custom;
   } catch (e) {
-    console.error('ICE_SERVERS inválido, usando o padrão.');
+    console.error('ICE_SERVERS inválido, mantendo STUNs públicos padrão.');
   }
 }
+
+let currentIce = ICE_SERVERS;
 
 const server = http.createServer((req, res) => {
   // O Render usa isso para saber que o servidor está vivo.
@@ -71,7 +80,7 @@ wss.on('connection', (ws) => {
       owners.set(m.id, { token: m.token, lastSeen: Date.now() });
       online.set(m.id, { ws, token: m.token });
       ws.id = m.id;
-      return send(ws, { type: 'registered', id: m.id, iceServers: ICE_SERVERS });
+      return send(ws, { type: 'registered', id: m.id, iceServers: currentIce });
     }
 
     if (!ws.id) return;
