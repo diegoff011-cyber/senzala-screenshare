@@ -7,28 +7,47 @@ const { WebSocketServer } = require('ws');
 
 const PORT = process.env.PORT || 3000;
 
-// Servidores STUN públicos de alta velocidade (Google, Cloudflare, Mozilla e STUN Protocol)
-// 100% gratuitos, ilimitados e sem depender de contas ou APIs de terceiros.
+// Servidores STUN públicos de fallback
 const DEFAULT_STUN_SERVERS = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun2.l.google.com:19302' },
   { urls: 'stun:stun.cloudflare.com:3478' },
-  { urls: 'stun:global.stun.twilio.com:3478' },
-  { urls: 'stun:stun.stunprotocol.org:3478' }
 ];
 
-let ICE_SERVERS = DEFAULT_STUN_SERVERS;
-if (process.env.ICE_SERVERS) {
+let currentIce = DEFAULT_STUN_SERVERS;
+
+// Busca servidores TURN da Metered (com credenciais do .env do Render)
+async function refreshIce() {
+  const domain = process.env.METERED_DOMAIN;
+  const key    = process.env.METERED_API_KEY;
+  if (!domain || !key) {
+    console.log('METERED_DOMAIN/METERED_API_KEY não definidos — usando só STUN públicos.');
+    return;
+  }
   try {
-    const custom = JSON.parse(process.env.ICE_SERVERS);
-    if (Array.isArray(custom) && custom.length) ICE_SERVERS = custom;
+    const https = require('https');
+    const url = `https://${domain}/api/v1/turn/credentials?apiKey=${key}`;
+    const data = await new Promise((resolve, reject) => {
+      https.get(url, (res) => {
+        let body = '';
+        res.on('data', d => body += d);
+        res.on('end', () => {
+          try { resolve(JSON.parse(body)); } catch { reject(new Error('JSON inválido')); }
+        });
+      }).on('error', reject);
+    });
+    if (Array.isArray(data) && data.length) {
+      currentIce = [...DEFAULT_STUN_SERVERS, ...data];
+      console.log(`ICE atualizado: ${currentIce.length} servidores (STUN + TURN Metered).`);
+    }
   } catch (e) {
-    console.error('ICE_SERVERS inválido, mantendo STUNs públicos padrão.');
+    console.error('Erro ao buscar TURN Metered:', e.message);
   }
 }
 
-let currentIce = ICE_SERVERS;
+// Atualiza na inicialização e a cada 12h (credenciais expiram a cada 24h)
+refreshIce();
+setInterval(refreshIce, 12 * 60 * 60 * 1000);
 
 const server = http.createServer((req, res) => {
   // O Render usa isso para saber que o servidor está vivo.
